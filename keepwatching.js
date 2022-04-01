@@ -1,3 +1,6 @@
+// Disable debug logging
+console.debug = function () {};
+
 console.debug("KeepWatching: loaded!");
 const PLAYER_STATE = {
     PLAYING: 1,
@@ -7,11 +10,13 @@ const PLAYER_STATE = {
 let player = document.getElementById("movie_player").wrappedJSObject;
 let videoID = player.getVideoData()['video_id'];
 
-let storedCurrentTime = browser.storage.local.get(videoID).then(function onGot(item) {
-    item = item[videoID];
-    if (item.hasOwnProperty("currentTime")) {
-        console.debug("KeepWatching:", item["currentTime"]);
-        player.seekTo(item["currentTime"]);        
+let storedCurrentTime = browser.storage.sync.get(videoID).then(function onGot(item) {
+    if (item.hasOwnProperty(videoID)) {
+        item = item[videoID];
+        if (item.hasOwnProperty("currentTime")) {
+            console.debug("KeepWatching:", item["currentTime"]);
+            player.seekTo(item["currentTime"]);        
+        } 
     } else {
         console.debug("KeepWatching:", "Couldn't find stored time for this video.");
     }
@@ -27,13 +32,10 @@ async function poll() {
             let currentTime = player.getCurrentTime();
             
             console.debug("KeepWatching: ", "Storing time", currentTime);
-            browser.storage.local.set({
+            browser.storage.sync.set({
                 [videoID]: { currentTime: currentTime }
             });
             
-            browser.storage.local.get(videoID).then(function onGot(item) {
-                console.debug("KeepWatching:", item);
-            });
         }
         
         await new Promise(r => setTimeout(r, 1000));
