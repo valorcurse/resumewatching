@@ -9,7 +9,7 @@ const PLAYER_STATE = {
 
 let player = document.getElementById("movie_player").wrappedJSObject;
 let videoID = player.getVideoData()['video_id'];
-
+let currentTime = Math.floor(player.getCurrentTime());
 
 let storedCurrentTime = browser.storage.sync.get(videoID).then(function onGot(item) {
     if (item.hasOwnProperty(videoID)) {
@@ -26,22 +26,20 @@ let storedCurrentTime = browser.storage.sync.get(videoID).then(function onGot(it
 });
 
 browser.storage.sync.onChanged.addListener((changes) => {
-
-    let currentTime = Math.floor(player.getCurrentTime());
     if (changes.hasOwnProperty(videoID)) {
         let newTime = Math.floor(changes[videoID].newValue.currentTime);
-        
         if (newTime != currentTime) {
             player.seekTo(newTime);      
         }  
     }
 });
+
 async function poll() {
     
     while (true) {
         if (player.getPlayerState() === PLAYER_STATE.PLAYING) {
             
-            let currentTime = Math.floor(player.getCurrentTime());
+            currentTime = Math.floor(player.getCurrentTime());
             
             console.debug("ResumeWatching:", "Storing time", currentTime);
             browser.storage.sync.set({
