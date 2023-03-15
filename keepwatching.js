@@ -1,7 +1,13 @@
 // Disable debug logging
 // console.debug = function () {};
 
-console.debug("ResumeWatching: loaded!");
+function print(...string) {
+    console.debug("ResumeWatching:", ...string);
+}
+
+print("loaded!");
+print(browser.runtime.getURL('/'));
+let uuid = browser.runtime.getURL('/');
 const PLAYER_STATE = {
     PLAYING: 1,
     PAUSED: 2
@@ -11,15 +17,15 @@ let player = document.getElementById("movie_player").wrappedJSObject;
 let videoID = player.getVideoData()['video_id'];
 let currentTime = Math.floor(player.getCurrentTime());
 
-let storedCurrentTime = browser.storage.sync.get(videoID).then(function onGot(item) {
+browser.storage.sync.get(videoID).then(function onGot(item) {
     if (item.hasOwnProperty(videoID)) {
         item = item[videoID];
         if (item.hasOwnProperty("currentTime")) {
-            console.debug("ResumeWatching:", "Found stored time for this video", item["currentTime"]);
+            print("Found stored time for this video", item["currentTime"]);
             player.seekTo(item["currentTime"]);        
         } 
     } else {
-        console.debug("ResumeWatching:", "Couldn't find stored time for this video.");
+        print("Couldn't find stored time for this video.");
     }
     
     poll();
@@ -27,9 +33,11 @@ let storedCurrentTime = browser.storage.sync.get(videoID).then(function onGot(it
 
 browser.storage.sync.onChanged.addListener((changes) => {
     if (changes.hasOwnProperty(videoID)) {
+        let changeUUID = Math.floor(changes[videoID].newValue.uuid);
         let newTime = Math.floor(changes[videoID].newValue.currentTime);
-        if (newTime != currentTime) {
-            player.seekTo(newTime);      
+        if (uuid != changeUUID && newTime != currentTime) {
+            print("New synced time", newTime);
+            player.seekTo(newTime);
         }  
     }
 });
@@ -41,9 +49,9 @@ async function poll() {
             
             currentTime = Math.floor(player.getCurrentTime());
             
-            console.debug("ResumeWatching:", "Storing time", currentTime);
+            print("Storing time", currentTime);
             browser.storage.sync.set({
-                [videoID]: { currentTime: currentTime }
+                [videoID]: { uuid: uuid, currentTime: currentTime }
             });
             
         }
