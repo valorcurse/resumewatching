@@ -1,16 +1,17 @@
 {
 
   "description": "",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Resume Watching",
-  "version": "1.5",
-  "homepage_url": "https://github.com/valorcurse/keepwatching",
+  "version": "2.0",
+  "homepage_url": "https://github.com/valorcurse/resumewatching",
   "icons": {
     "128": "icons/icon-128.png"
   },
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "webNavigation"
   ],
   "browser_specific_settings": {
     "gecko": {
@@ -20,8 +21,11 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["keepwatching.js"]
+      "js": ["resumewatching-content.js"]
     }
-  ]
+  ],
+  "background": {
+    "scripts": ["resumewatching-bg.js"]
+  }
 
 }
