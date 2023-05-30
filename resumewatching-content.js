@@ -34,7 +34,7 @@ async function poll(player, videoID, uuid) {
     }
 }
 
-browser.runtime.onMessage.addListener((dataender) => {
+browser.runtime.onMessage.addListener((data) => {
     let uuid = browser.runtime.getURL('/');
     let player = document.getElementById("movie_player").wrappedJSObject;
     
