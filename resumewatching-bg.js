@@ -4,9 +4,9 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     const url = new URL(tab.url);
     console.log("creating url", url);
     const videoParam = url.searchParams.get('v');
-    console.log("comparing videoParam", videoParam);
+    console.log("getting videoParam", videoParam);
     if (videoParam) {
-      console.log("sending message");
+      console.log("sending message:", tabId, {videoID: videoParam});
       browser.tabs.sendMessage(tabId, {videoID: videoParam});
     }
   }
@@ -27,8 +27,7 @@ browser.webNavigation.onHistoryStateUpdated.addListener(history => {
         return;
     }
 
-    browser.tabs
-      .sendMessage(history.tabId, {videoID: videoParam});
+    browser.tabs.sendMessage(history.tabId, {videoID: videoParam});
   },
   {url: [{urlMatches: '^https://www.youtube.com/watch\?.+'}]}
 );

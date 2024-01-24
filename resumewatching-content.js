@@ -34,29 +34,52 @@ async function poll(player, videoID, uuid) {
     }
 }
 
-browser.runtime.onMessage.addListener((data) => {
-    let uuid = browser.runtime.getURL('/');
-    let player = document.getElementById("movie_player").wrappedJSObject;
-    
-    const url = new URL(window.location.href);
-    let videoID = url.searchParams.get('v');
-
-    log("videoID", videoID, data.videoID);
-    
-    if (videoID != data.videoID) return;
-
-
-    browser.storage.sync.get().then(function onGot(item) {
-        if (item.hasOwnProperty(videoID)) {
-            item = item[videoID];
-            if (item.hasOwnProperty("currentTime")) {
-                log("Found stored time for video", videoID, item["currentTime"]);
-                player.seekTo(item["currentTime"]);
-            } 
-        } else {
-            log("Couldn't find stored time for this video.");
+function waitForElm(selector) {
+    return new Promise(resolve => {
+        if (document.querySelector(selector)) {
+            return resolve(document.querySelector(selector));
         }
-    });
 
-    poll(player, videoID, uuid);
+        const observer = new MutationObserver(mutations => {
+            if (document.querySelector(selector)) {
+                observer.disconnect();
+                resolve(document.querySelector(selector));
+            }
+        });
+
+        // If you get "parameter 1 is not of type 'Node'" error, see https://stackoverflow.com/a/77855838/492336
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+}
+
+
+
+browser.runtime.onMessage.addListener((data) => {
+    waitForElm('#movie_player').then((elm) => {
+        let uuid = browser.runtime.getURL('/');
+        let player = document.getElementById("movie_player").wrappedJSObject;
+    
+        const url = new URL(window.location.href);
+        let videoID = url.searchParams.get('v');
+
+        if (videoID != data.videoID) return;
+
+        browser.storage.sync.get().then(function onGot(item) {
+            if (item.hasOwnProperty(videoID)) {
+                item = item[videoID];
+                if (item.hasOwnProperty("currentTime")) {
+                    log("Found stored time for video", videoID, item["currentTime"]);
+                    player.seekTo(item["currentTime"]);
+                } 
+            } else {
+                log("Couldn't find stored time for this video.");
+            }
+        });
+
+        log("Start polling!");
+        poll(player, videoID, uuid);
+    });
 });
