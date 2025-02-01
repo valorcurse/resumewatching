@@ -9,7 +9,7 @@ function log(...string) {
     console.debug("ResumeWatching:", ...string);
 }
 
-log("content loaded!");
+log("Plugin loaded!");
 
 async function poll(player, videoID, uuid) {
     let randID = Math.floor(Math.random() * 100);
@@ -17,10 +17,11 @@ async function poll(player, videoID, uuid) {
         if (player.getPlayerState() === PLAYER_STATE.PLAYING) {
             let currentTime = Math.floor(player.getCurrentTime());
             
-            log("Storing time", currentTime);
-            browser.storage.sync.set({
+            log(`Storing time ${currentTime} for ${videoID}`);
+            let settingItem = browser.storage.sync.set({
                 [videoID]: { uuid: uuid, currentTime: currentTime }
             });
+            log(settingItem)
             
         }
         
@@ -67,9 +68,18 @@ browser.runtime.onMessage.addListener((data) => {
 
         if (videoID != data.videoID) return;
 
-        browser.storage.sync.get().then(function onGot(item) {
-            if (item.hasOwnProperty(videoID)) {
-                item = item[videoID];
+        browser.storage.sync.get().then((items) => {
+            
+
+            // Remove oldest item if we have 512 items in storage
+            const maxItemsInStorage = 512;
+            let keys = Object.keys(items);
+            if (keys.length == maxItemsInStorage) {
+                browser.storage.sync.remove(keys[0]);
+            }
+
+            if (items.hasOwnProperty(videoID)) {
+                let item = items[videoID];
                 if (item.hasOwnProperty("currentTime")) {
                     log("Found stored time for video", videoID, item["currentTime"]);
                     player.seekTo(item["currentTime"]);
