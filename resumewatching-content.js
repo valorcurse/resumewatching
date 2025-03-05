@@ -1,11 +1,11 @@
 // Disable debug logging
 // console.debug = function () {};
-if (typeof PLAYER_STATE === 'undefined') {
+// if (typeof PLAYER_STATE === 'undefined') {
     const PLAYER_STATE = {
         PLAYING: 1,
         PAUSED: 2
     }
-}
+// }
 
 function log(...string) {
     console.debug("ResumeWatching:", ...string);

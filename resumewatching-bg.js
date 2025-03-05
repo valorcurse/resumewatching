@@ -12,9 +12,23 @@ function getVideoID(tabUrl) {
   return videoParam;
 }
 
+// function sendMessage(tabId, videoParam) {
+//   browser.tabs.executeScript(tabId, {
+//     file: "resumewatching-content.js"
+//   }).then(() => {
+//     browser.tabs.sendMessage(tabId, {videoID: videoParam});
+//   }).catch(onError);
+// }
+
 function sendMessage(tabId, videoParam) {
   browser.tabs.executeScript(tabId, {
-    file: "resumewatching-content.js"
+    code: 'typeof PLAYER_STATE !== "undefined";'
+  }).then((results) => {
+    if (!results[0]) {
+      return browser.tabs.executeScript(tabId, {
+        file: "resumewatching-content.js"
+      });
+    }
   }).then(() => {
     browser.tabs.sendMessage(tabId, {videoID: videoParam});
   }).catch(onError);
