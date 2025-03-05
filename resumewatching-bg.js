@@ -1,34 +1,63 @@
-browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  console.log("Browser tab reloaded!");
-  if (changeInfo.status == "complete") {
-    const url = new URL(tab.url);
-    console.log("creating url", url);
-    const videoParam = url.searchParams.get('v');
-    console.log("getting videoParam", videoParam);
-    if (videoParam) {
-      console.log("sending message:", tabId, {videoID: videoParam});
-      browser.tabs.sendMessage(tabId, {videoID: videoParam});
-    }
-  }
-});
-
 function onError(error) {
   console.error(`Error: ${error}`);
 }
 
+function getVideoID(tabUrl) {
+  const url = new URL(tabUrl);
+  console.log("Creating url", url);
+  
+  const videoParam = url.searchParams.get('v');
+  console.log("Getting videoParam", videoParam);
+  
+  return videoParam;
+}
+
+function sendMessage(tabId, videoParam) {
+  browser.tabs.executeScript(tabId, {
+    file: "resumewatching-content.js"
+  }).then(() => {
+    browser.tabs.sendMessage(tabId, {videoID: videoParam});
+  }).catch(onError);
+}
+
+browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  console.log("Browser tab reloaded!");
+  if (changeInfo.status == "complete") {
+    
+    let videoParam = getVideoID(tab.url);
+    if (videoParam) {
+      console.log("Sending message:", tabId, {videoID: videoParam});
+      sendMessage(tabId, videoParam);
+    }
+  }
+});
 
 browser.webNavigation.onHistoryStateUpdated.addListener(history => {
   console.error("History updated!");
-    const url = new URL(history.url);
-    const videoParam = url.searchParams.get('v');
-    console.log("videoParam" , videoParam)
-    if (!videoParam) {
-        // not a video
-        return;
-    }
-
-    browser.tabs.sendMessage(history.tabId, {videoID: videoParam});
-  },
-  {url: [{urlMatches: '^https://www.youtube.com/watch\?.+'}]}
+  const videoParam = getVideoID(history.url);
+  
+  if (videoParam) {
+    // browser.tabs.sendMessage(history.tabId, {videoID: videoParam});
+    sendMessage(history.id, videoParam);
+  }
+},
+{url: [{urlMatches: '^https://www.youtube.com/watch\?.+'}]}
 );
 
+browser.runtime.onInstalled.addListener((details) => {
+  console.log("Extension installed or updated", details);
+  
+  // Query all active tabs
+  browser.tabs.query({active: true, currentWindow: false}).then((tabs) => {
+    tabs.forEach((tab) => {
+      console.log("tab:", tab.id, tab.url);
+      
+      const videoParam = getVideoID(tab.url);
+      if (videoParam) {
+        console.log("Sending message:", tab.id, {videoID: videoParam});
+        sendMessage(tab.id, videoParam);
+      }
+      
+    });
+  }).catch(onError);
+});

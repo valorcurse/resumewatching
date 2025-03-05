@@ -1,9 +1,8 @@
 {
-
   "description": "",
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "Resume Watching",
-  "version": "2.4",
+  "version": "2.5",
   "homepage_url": "https://github.com/valorcurse/resumewatching",
   "icons": {
     "128": "icons/icon-128.png"
@@ -27,5 +26,4 @@
   "background": {
     "scripts": ["resumewatching-bg.js"]
   }
-
 }

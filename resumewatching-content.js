@@ -1,10 +1,12 @@
 // Disable debug logging
 // console.debug = function () {};
-
-const PLAYER_STATE = {
-    PLAYING: 1,
-    PAUSED: 2
+if (typeof PLAYER_STATE === 'undefined') {
+    const PLAYER_STATE = {
+        PLAYING: 1,
+        PAUSED: 2
+    }
 }
+
 function log(...string) {
     console.debug("ResumeWatching:", ...string);
 }
@@ -36,14 +38,17 @@ async function poll(player, videoID, uuid) {
 }
 
 function waitForElm(selector) {
+    log("Waiting for element", selector);
     return new Promise(resolve => {
         if (document.querySelector(selector)) {
+            log("1 - Found element", document.querySelector(selector));
             return resolve(document.querySelector(selector));
         }
 
-        const observer = new MutationObserver(mutations => {
+        const observer = new MutationObserver(() => {
             if (document.querySelector(selector)) {
                 observer.disconnect();
+                log("2 - Found element", document.querySelector(selector));
                 resolve(document.querySelector(selector));
             }
         });
@@ -57,8 +62,9 @@ function waitForElm(selector) {
 }
 
 
-
+log("Adding listener")
 browser.runtime.onMessage.addListener((data) => {
+    log("Message received:", data);
     waitForElm('#movie_player').then((elm) => {
         let uuid = browser.runtime.getURL('/');
         let player = document.getElementById("movie_player").wrappedJSObject;
@@ -75,6 +81,7 @@ browser.runtime.onMessage.addListener((data) => {
             const maxItemsInStorage = 512;
             let keys = Object.keys(items);
             if (keys.length == maxItemsInStorage) {
+                log(`Removing oldest item from storage: ${keys[0]}`);
                 browser.storage.sync.remove(keys[0]);
             }
 
