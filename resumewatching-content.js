@@ -80,9 +80,15 @@ browser.runtime.onMessage.addListener((data) => {
             // Remove oldest item if we have 512 items in storage
             const maxItemsInStorage = 512;
             let keys = Object.keys(items);
-            if (keys.length == maxItemsInStorage) {
-                log(`Removing oldest item from storage: ${keys[0]}`);
-                browser.storage.sync.remove(keys[0]);
+            log(keys.length, maxItemsInStorage)
+            if (keys.length >= maxItemsInStorage) {
+                const diff = keys.length - maxItemsInStorage + 1;
+                for (let i = 0; i < diff; i++) {
+                    log(`Removing oldest item from storage: ${keys[i]}`);
+                    browser.storage.sync.remove(keys[i]);
+                }
+                // log(`Removing oldest item from storage: ${keys[0]}`);
+                // browser.storage.sync.remove(keys[0]);
             }
 
             if (items.hasOwnProperty(videoID)) {
